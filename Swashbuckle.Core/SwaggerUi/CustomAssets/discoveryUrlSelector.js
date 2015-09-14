@@ -26,6 +26,7 @@
                     select.val(defaultVal);
                 that.$el.replaceWith(select);
 
+                $('#input_baseUrl').siblings('label').text('Version').show();
                 $('#input_baseUrl').on('change', function () {
                     //console.log('selected index: ' + that.options.discoveryPaths.indexOf($(this).val()));
                     setGetParameter('versionIndex', that.options.discoveryPaths.indexOf($(this).val()));
