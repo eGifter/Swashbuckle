@@ -131,8 +131,8 @@ namespace Swashbuckle.Application
                 if (resourceName.Contains("Swashbuckle.SwaggerUi.CustomAssets")) continue; // original assets only
 
                 var path = resourceName
-                    .Replace("\\", "/")
-                    .Replace(".", "-"); // extensionless to avoid RUMMFAR
+                    .Replace("\\", "/");
+                    //.Replace(".", "-"); // extensionless to avoid RUMMFAR
 
                 _pathToAssetMap[path] = new EmbeddedAssetDescriptor(thisAssembly, resourceName, path == "index");
             }
