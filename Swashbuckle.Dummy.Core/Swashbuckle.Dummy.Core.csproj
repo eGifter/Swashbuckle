@@ -49,14 +49,23 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.2\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Cors">
+      <HintPath>..\packages\Microsoft.AspNet.Cors.5.0.0\lib\net45\System.Web.Cors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.Http, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.2\lib\net45\System.Web.Http.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Http.Cors">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Cors.5.0.0\lib\net45\System.Web.Http.Cors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\CachingSwaggerProvider.cs" />
+    <Compile Include="App_Start\CustomCorsPolicyProvider.cs" />
     <Compile Include="Controllers\ConflictingTypesController.cs" />
+    <Compile Include="Controllers\FileDownloadController.cs" />
     <Compile Include="Controllers\FileUploadController.cs" />
     <Compile Include="Controllers\FromUriParamsContoller.cs" />
     <Compile Include="Controllers\ConflictingActionsController.cs" />
@@ -65,6 +74,7 @@
     <Compile Include="Controllers\JsonAnnotatedTypesController.cs" />
     <Compile Include="Controllers\NullableTypesController.cs" />
     <Compile Include="Controllers\ObsoletePropertiesController.cs" />
+    <Compile Include="Controllers\PathRequiredController.cs" />
     <Compile Include="Controllers\ProtectedResourcesController.cs" />
     <Compile Include="Controllers\SelfReferencingTypesController.cs" />
     <Compile Include="Controllers\CustomersController.cs" />
@@ -89,6 +99,8 @@
     <Compile Include="SwaggerExtensions\AssignOAuth2SecurityRequirements.cs" />
     <Compile Include="SwaggerExtensions\DescendingAlphabeticComparer.cs" />
     <Compile Include="SwaggerExtensions\AddGetMessageExamples.cs" />
+    <Compile Include="SwaggerExtensions\SupportFlaggedEnums.cs" />
+    <Compile Include="SwaggerExtensions\UpdateFileDownloadOperations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\SwaggerConfig.cs" />

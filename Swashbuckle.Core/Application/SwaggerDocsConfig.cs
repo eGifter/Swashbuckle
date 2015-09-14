@@ -26,12 +26,15 @@ namespace Swashbuckle.Application
         private readonly IList<Func<ISchemaFilter>> _schemaFilters;
         private readonly IList<Func<IModelFilter>> _modelFilters;
         private bool _ignoreObsoleteProperties;
-        private bool _useFullTypeNameInSchemaIds;
+        private Func<Type, string> _schemaIdSelector;
         private bool _describeAllEnumsAsStrings;
+        private bool _describeStringEnumsInCamelCase;
         private readonly IList<Func<IOperationFilter>> _operationFilters;
         private readonly IList<Func<IDocumentFilter>> _documentFilters;
         private Func<IEnumerable<ApiDescription>, ApiDescription> _conflictingActionsResolver;
         private Func<HttpRequestMessage, string> _rootUrlResolver;
+
+        private Func<ISwaggerProvider, ISwaggerProvider> _customProviderFactory;
 
         public SwaggerDocsConfig()
         {
@@ -42,8 +45,8 @@ namespace Swashbuckle.Application
             _schemaFilters = new List<Func<ISchemaFilter>>();
             _modelFilters = new List<Func<IModelFilter>>();
             _ignoreObsoleteProperties = false;
-            _useFullTypeNameInSchemaIds = false;
             _describeAllEnumsAsStrings = false;
+            _describeStringEnumsInCamelCase = false;
             _operationFilters = new List<Func<IOperationFilter>>();
             _documentFilters = new List<Func<IDocumentFilter>>();
             _rootUrlResolver = DefaultRootUrlResolver;
@@ -142,14 +145,20 @@ namespace Swashbuckle.Application
             _modelFilters.Add(factory);
         }
 
-        public void UseFullTypeNameInSchemaIds()
+        public void SchemaId(Func<Type, string> schemaIdStrategy)
         {
-            _useFullTypeNameInSchemaIds = true;
+            _schemaIdSelector = schemaIdStrategy;
         }
 
-        public void DescribeAllEnumsAsStrings()
+        public void UseFullTypeNameInSchemaIds()
+        {
+            _schemaIdSelector = t => t.FriendlyId(true);
+        }
+
+        public void DescribeAllEnumsAsStrings(bool camelCase = false)
         {
             _describeAllEnumsAsStrings = true;
+            _describeStringEnumsInCamelCase = camelCase;
         }
 
         public void IgnoreObsoleteProperties()
@@ -195,6 +204,11 @@ namespace Swashbuckle.Application
             _rootUrlResolver = rootUrlResolver;
         }
 
+        public void CustomProvider(Func<ISwaggerProvider, ISwaggerProvider> customProviderFactory)
+        {
+            _customProviderFactory = customProviderFactory;
+        }
+
         internal ISwaggerProvider GetSwaggerProvider(HttpRequestMessage swaggerRequest)
         {
             var httpConfig = swaggerRequest.GetConfiguration();
@@ -202,9 +216,6 @@ namespace Swashbuckle.Application
             var securityDefintitions = _securitySchemeBuilders.Any()
                 ? _securitySchemeBuilders.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Build())
                 : null;
-
-            var describeAllEnumsAsStrings = _describeAllEnumsAsStrings
-                || httpConfig.HasJsonConverterOfType<StringEnumConverter>();
 
             var options = new SwaggerGeneratorOptions(
                 versionSupportResolver: _versionSupportResolver,
@@ -217,18 +228,23 @@ namespace Swashbuckle.Application
                 schemaFilters: _schemaFilters.Select(factory => factory()),
                 modelFilters: _modelFilters.Select(factory => factory()),
                 ignoreObsoleteProperties: _ignoreObsoleteProperties,
-                useFullTypeNameInSchemaIds: _useFullTypeNameInSchemaIds,
-                describeAllEnumsAsStrings: describeAllEnumsAsStrings,
+                schemaIdSelector: _schemaIdSelector,
+                describeAllEnumsAsStrings: _describeAllEnumsAsStrings,
+                describeStringEnumsInCamelCase: _describeStringEnumsInCamelCase,
                 operationFilters: _operationFilters.Select(factory => factory()),
                 documentFilters: _documentFilters.Select(factory => factory()),
                 conflictingActionsResolver: _conflictingActionsResolver
             );
 
-            return new SwaggerGenerator(
+            var defaultProvider = new SwaggerGenerator(
                 httpConfig.Services.GetApiExplorer(),
-                httpConfig.GetJsonContractResolver(),
+                httpConfig.SerializerSettingsOrDefault(),
                 _versionInfoBuilder.Build(),
                 options);
+
+            return (_customProviderFactory != null)
+                ? _customProviderFactory(defaultProvider)
+                : defaultProvider;
         }
 
         internal string GetRootUrl(HttpRequestMessage swaggerRequest)

@@ -112,6 +112,8 @@ namespace Swashbuckle.Tests.Swagger
                             },
                             Note = new
                             {
+                                maxLength = 500,
+                                minLength = 10,
                                 type = "string"
                             }
                         }
@@ -227,7 +229,8 @@ namespace Swashbuckle.Tests.Swagger
         [Test]
         public void It_honors_json_string_enum_converter_configured_globally()
         {
-            Configuration.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
+            Configuration.Formatters.JsonFormatter.SerializerSettings.Converters.Add(
+                new StringEnumConverter { CamelCaseText = true });
             SetUpDefaultRouteFor<ProductsController>();
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
@@ -235,7 +238,7 @@ namespace Swashbuckle.Tests.Swagger
 
             var expected = JObject.FromObject(new
                 {
-                    @enum = new[] { "Book", "Album" },
+                    @enum = new[] { "book", "album" },
                     type = "string"
                 });
             Assert.AreEqual(expected.ToString(), typeSchema.ToString());
@@ -310,6 +313,31 @@ namespace Swashbuckle.Tests.Swagger
             var defintitions = swagger["definitions"];
 
             Assert.AreEqual(2, defintitions.Count());
+        }
+
+        [Test]
+        public void It_exposes_config_to_choose_schema_id()
+        {
+            SetUpDefaultRouteFor<ProductsController>();
+            SetUpHandler(c => c.SchemaId(t => "my custom name"));
+
+            var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
+            var defintitions = swagger["definitions"];
+
+            Assert.IsNotNull(defintitions["my custom name"]);
+        }
+
+        [Test]
+        public void It_exposes_config_to_modify_schema_ids()
+        {
+            SetUpDefaultRouteFor<ConflictingTypesController>();
+            // We have to know the default implementation of FriendlyId before we can modify it's output.
+            SetUpHandler(c => { c.SchemaId(t => t.FriendlyId(true).Replace("Swashbuckle.Dummy.Controllers.", String.Empty)); });
+
+            var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
+            var defintitions = swagger["definitions"];
+
+            Assert.IsNotNull(defintitions["Requests.Blog"]);
         }
 
         [Test]
@@ -485,6 +513,17 @@ namespace Swashbuckle.Tests.Swagger
             SetUpDefaultRouteFor<ConflictingTypesController>();
 
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
+        }
+
+        [Test]
+        public void It_always_marks_path_parameters_as_required()
+        {
+            SetUpDefaultRouteFor<PathRequiredController>();
+
+            var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
+            var required = (bool)swagger["paths"]["/pathrequired/{id}"]["get"]["parameters"][0]["required"];
+
+            Assert.IsTrue(required);
         }
     }
 }

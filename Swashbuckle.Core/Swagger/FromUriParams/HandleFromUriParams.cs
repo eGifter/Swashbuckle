@@ -42,7 +42,8 @@ namespace Swashbuckle.Swagger.FromUriParams
                 var refSchema = schemaRegistry.GetOrRegister(type);
                 var schema = schemaRegistry.Definitions[refSchema.@ref.Replace("#/definitions/", "")];
 
-                ExtractAndAddQueryParams(schema, "", objectParam.required, schemaRegistry, operation.parameters);
+                var qualifier = string.IsNullOrEmpty(objectParam.name) ? "" : (objectParam.name + ".");
+                ExtractAndAddQueryParams(schema, qualifier, objectParam.required, schemaRegistry, operation.parameters);
                 operation.parameters.Remove(objectParam);
             }
         }
@@ -50,14 +51,16 @@ namespace Swashbuckle.Swagger.FromUriParams
         private void ExtractAndAddQueryParams(
             Schema sourceSchema,
             string sourceQualifier,
-            bool sourceRequired,
+            bool? sourceRequired,
             SchemaRegistry schemaRegistry,
             IList<Parameter> operationParams)
         {
             foreach (var entry in sourceSchema.properties)
             {
                 var propertySchema = entry.Value;
-                var required = sourceRequired
+                if (propertySchema.readOnly == true) continue;
+
+                var required = (sourceRequired == true)
                     && sourceSchema.required != null && sourceSchema.required.Contains(entry.Key); 
 
                 if (propertySchema.@ref != null)
@@ -65,7 +68,7 @@ namespace Swashbuckle.Swagger.FromUriParams
                     var schema = schemaRegistry.Definitions[propertySchema.@ref.Replace("#/definitions/", "")];
                     ExtractAndAddQueryParams(
                         schema,
-                        sourceQualifier + entry.Key.ToLowerInvariant() + ".",
+                        sourceQualifier + entry.Key.ToCamelCase() + ".",
                         required,
                         schemaRegistry,
                         operationParams);
@@ -74,12 +77,14 @@ namespace Swashbuckle.Swagger.FromUriParams
                 {
                     var param = new Parameter
                     {
-                        name =  sourceQualifier + entry.Key.ToLowerInvariant(),
+                        name =  sourceQualifier + entry.Key.ToCamelCase(),
                         @in = "query",
                         required = required,
                         description = entry.Value.description
                     };
                     param.PopulateFrom(entry.Value);
+                    if (param.type == "array")
+                        param.collectionFormat = "multi";
                     operationParams.Add(param);
                 }
             }

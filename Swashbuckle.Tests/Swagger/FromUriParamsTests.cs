@@ -19,7 +19,7 @@ namespace Swashbuckle.Tests.Swagger
         }
 
         [Test]
-        public void It_set_collection_format_multi_for_array_params()
+        public void It_sets_collection_format_multi_for_array_params()
         {
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
             var headParams = swagger["paths"]["/fromuriparams"]["head"]["parameters"];
@@ -47,20 +47,28 @@ namespace Swashbuckle.Tests.Swagger
         public void It_creates_multiple_query_params_for_from_uri_object_params()
         {
             var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
-            var getParams = swagger["paths"]["/fromuriparams"]["get"]["parameters"];
+            var getParams = swagger["paths"]["/fromuriparams/{id}"]["get"]["parameters"];
 
             var expectedGetParams = JArray.FromObject(new object[]
             {
                 new
                 {
-                    name = "currency",
+                    name = "id",
+                    @in = "path",
+                    required = true,
+                    type = "integer",
+                    format = "int32"
+                },
+                new
+                {
+                    name = "trx.currency",
                     @in = "query",
                     required = true,
                     type = "string"
                 },
                 new
                 {
-                    name = "amount",
+                    name = "trx.amount",
                     @in = "query",
                     required = true,
                     type = "number",
@@ -68,31 +76,57 @@ namespace Swashbuckle.Tests.Swagger
                 },
                 new
                 {
-                    name = "billto.country",
+                    name = "billTo.country",
                     @in = "query",
                     required = true,
                     type = "string"
                 },
                 new
                 {
-                    name = "billto.city",
+                    name = "billTo.city",
                     @in = "query",
                     required = false,
                     type = "string"
                 },
                 new
                 {
-                   name = "shipto.country",
+                   name = "shipTo.country",
                    @in = "query",
                    required = false,
                    type = "string"
                 },
                 new
                 {
-                    name = "shipto.city",
+                    name = "shipTo.city",
                     @in = "query",
                     required = false,
                     type = "string"
+                }
+            });
+
+            Assert.AreEqual(expectedGetParams.ToString(), getParams.ToString());
+        }
+
+        [Test]
+        public void It_sets_collection_format_multi_for_object_with_array_property()
+        {
+            var swagger = GetContent<JObject>("http://tempuri.org/swagger/docs/v1");
+            var getParams = swagger["paths"]["/fromuriparams"]["get"]["parameters"];
+
+            var expectedGetParams = JArray.FromObject(new object[]
+            {
+                new
+                {
+                    name = "search.transactionIds",
+                    @in = "query",
+                    required = false,
+                    type = "array",
+                    items = new
+                    {
+                        type = "integer",
+                        format = "int32"
+                    },
+                    collectionFormat = "multi"
                 }
             });
 

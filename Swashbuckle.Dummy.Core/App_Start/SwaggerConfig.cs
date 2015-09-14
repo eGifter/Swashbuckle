@@ -8,6 +8,7 @@ using System.Web.Http.Routing.Constraints;
 using Swashbuckle.Application;
 using Swashbuckle.Dummy.Controllers;
 using Swashbuckle.Dummy.SwaggerExtensions;
+using Swashbuckle.Dummy.App_Start;
 
 namespace Swashbuckle.Dummy
 {
@@ -104,6 +105,13 @@ namespace Swashbuckle.Dummy
                         //
                         //c.OrderActionGroupsBy(new DescendingAlphabeticComparer());
 
+                        // If you annonate Controllers and API Types with
+                        // Xml comments (http://msdn.microsoft.com/en-us/library/b2s063f7(v=vs.110).aspx), you can incorporate
+                        // those comments into the generated docs and UI. You can enable this by providing the path to one or
+                        // more Xml comment files.
+                        //
+                        c.IncludeXmlComments(GetXmlCommentsPath());
+
                         // Swashbuckle makes a best attempt at generating Swagger compliant JSON schemas for the various types
                         // exposed in your API. However, there may be occasions when more control of the output is needed.
                         // This is supported through the MapType and SchemaFilter options:
@@ -154,6 +162,8 @@ namespace Swashbuckle.Dummy
                         //
                         c.OperationFilter<AssignOAuth2SecurityRequirements>();
                         c.OperationFilter<AddFileUploadParams>();
+                        c.OperationFilter<SupportFlaggedEnums>();
+                        c.OperationFilter<UpdateFileDownloadOperations>();
 
                         // Post-modify the entire Swagger document by wiring up one or more Document filters.
                         // This gives full control to modify the final SwaggerDocument. You should have a good understanding of
@@ -164,19 +174,17 @@ namespace Swashbuckle.Dummy
                         //
                         //c.DocumentFilter<AppendVersionToBasePath>();
 
-                        // If you annonate Controllers and API Types with
-                        // Xml comments (http://msdn.microsoft.com/en-us/library/b2s063f7(v=vs.110).aspx), you can incorporate
-                        // those comments into the generated docs and UI. You can enable this by providing the path to one or
-                        // more Xml comment files.
-                        //
-                        c.IncludeXmlComments(GetXmlCommentsPath());
-
                         // In contrast to WebApi, Swagger 2.0 does not include the query string component when mapping a URL
                         // to an action. As a result, Swashbuckle will raise an exception if it encounters multiple actions
                         // with the same path (sans query string) and HTTP method. You can workaround this by providing a
                         // custom strategy to pick a winner or merge the descriptions for the purposes of the Swagger docs 
                         //
                         c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+
+                        // Wrap the default SwaggerGenerator with additional behavior (e.g. caching) or provide an
+                        // alternative implementation for ISwaggerProvider with the CustomProvider option.
+                        //
+                        c.CustomProvider((defaultProvider) => new CachingSwaggerProvider(defaultProvider));
                     })
                 .EnableSwaggerUi(c =>
                     {
@@ -223,7 +231,7 @@ namespace Swashbuckle.Dummy
                         // a discovery URL for each version. This provides a convenient way for users to browse documentation
                         // for different API versions.
                         //
-                        c.EnableDiscoveryUrlSelector();
+                        //c.EnableDiscoveryUrlSelector();
 
                         // If your API supports the OAuth2 Implicit flow, and you've described it correctly, according to
                         // the Swagger 2.0 specification, you can enable UI support as shown below.

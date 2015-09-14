@@ -17,9 +17,10 @@ namespace Swashbuckle.Swagger
             IDictionary<Type, Func<Schema>> customSchemaMappings = null,
             IEnumerable<ISchemaFilter> schemaFilters = null,
             IEnumerable<IModelFilter> modelFilters = null,
-            bool ignoreObsoleteProperties = false, 
-            bool useFullTypeNameInSchemaIds = false, 
+            bool ignoreObsoleteProperties = false,
+            Func<Type, string> schemaIdSelector = null, 
             bool describeAllEnumsAsStrings = false,
+            bool describeStringEnumsInCamelCase = false,
             IEnumerable<IOperationFilter> operationFilters = null,
             IEnumerable<IDocumentFilter> documentFilters = null,
             Func<IEnumerable<ApiDescription>, ApiDescription> conflictingActionsResolver = null
@@ -35,8 +36,9 @@ namespace Swashbuckle.Swagger
             SchemaFilters = schemaFilters ?? new List<ISchemaFilter>();
             ModelFilters = modelFilters ?? new List<IModelFilter>();
             IgnoreObsoleteProperties = ignoreObsoleteProperties;
-            UseFullTypeNameInSchemaIds = useFullTypeNameInSchemaIds;
+            SchemaIdSelector = schemaIdSelector ?? DefaultSchemaIdSelector;
             DescribeAllEnumsAsStrings = describeAllEnumsAsStrings;
+            DescribeStringEnumsInCamelCase = describeStringEnumsInCamelCase;
             OperationFilters = operationFilters ?? new List<IOperationFilter>();
             DocumentFilters = documentFilters ?? new List<IDocumentFilter>();
             ConflictingActionsResolver = conflictingActionsResolver ?? DefaultConflictingActionsResolver;
@@ -62,9 +64,11 @@ namespace Swashbuckle.Swagger
 
         public bool IgnoreObsoleteProperties { get; private set; }
 
-        public bool UseFullTypeNameInSchemaIds { get; private set; }
+        public Func<Type, string> SchemaIdSelector { get; private set; }
 
         public bool DescribeAllEnumsAsStrings { get; private set; }
+
+        public bool DescribeStringEnumsInCamelCase { get; private set; }
 
         public IEnumerable<IOperationFilter> OperationFilters { get; private set; }
 
@@ -75,6 +79,11 @@ namespace Swashbuckle.Swagger
         private string DefaultGroupingKeySelector(ApiDescription apiDescription)
         {
             return apiDescription.ActionDescriptor.ControllerDescriptor.ControllerName;
+        }
+
+        private static string DefaultSchemaIdSelector(Type type)
+        {
+            return type.FriendlyId();
         }
 
         private ApiDescription DefaultConflictingActionsResolver(IEnumerable<ApiDescription> apiDescriptions)

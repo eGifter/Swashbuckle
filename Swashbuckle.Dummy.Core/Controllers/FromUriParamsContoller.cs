@@ -15,14 +15,30 @@ namespace Swashbuckle.Dummy.Controllers
         }
 
         [HttpGet]
-        public decimal CalculateTax([FromUri]Transaction transaction, [FromUri]BillingInfo billingInfo)
+        public decimal CalculateTax(
+            int id,
+            [FromUri(Name="trx")]Transaction transaction,
+            [FromUri(Name="")]BillingInfo billingInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        [HttpGet]
+        public IEnumerable<Transaction> SearchTransactions([FromUri]TransactionSearch search)
         {
             throw new NotImplementedException();
         }
     }
 
+    public class TransactionSearch
+    {
+        public ICollection<int> TransactionIds { get; set; }
+    }
+
     public class Transaction
     {
+        public int Id { get; internal set; }
+
         [Required]
         public string Currency { get; set; }
 
