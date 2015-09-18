@@ -31,6 +31,8 @@
                     //console.log('selected index: ' + that.options.discoveryPaths.indexOf($(this).val()));
                     setGetParameter('versionIndex', that.options.discoveryPaths.indexOf($(this).val()));
                 });
+
+                $('<div id="egLogo" />').append('<img id="egLogo" src="//egifter.com/Images/themes/eGifter/egifter-logo120.png" />').prependTo('.sticky-nav');
             }
             return this;
         }
