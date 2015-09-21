@@ -33,6 +33,10 @@
                 });
 
                 $('<div id="egLogo" />').append('<img id="egLogo" src="//egifter.com/Images/themes/eGifter/egifter-logo120.png" />').prependTo('.sticky-nav');
+                $('h4[data-toggle]:not(.collapsed)').trigger('click');
+                setTimeout(function() {
+                    $('h4[data-toggle]:not(.collapsed)').trigger('click');
+                }, 500);
             }
             return this;
         }
